@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from sqlalchemy import Index, text
 from sqlmodel import DateTime, Field, Relationship, SQLModel
 
 
@@ -24,6 +25,14 @@ class Category(SQLModel, table=True):
 
 
 class TimeSession(SQLModel, table=True):
+    __table_args__ = (
+        Index(
+            "uq_one_running_session",
+            text("(1)"),
+            unique=True,
+            postgresql_where=text("end_time IS NULL"),
+        ),
+    )  # Partial filter
     id: Optional[int] = Field(default=None, primary_key=True)
     category_id: int = Field(foreign_key="category.id", index=True)
     start_time: datetime = Field(
