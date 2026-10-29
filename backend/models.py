@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import DateTime, Field, Relationship, SQLModel
 
 
 def utc_now() -> datetime:
@@ -16,7 +16,9 @@ class Category(SQLModel, table=True):
     daily_target_minutes: Optional[int] = Field(default=None, ge=0)
     weekly_target_minutes: Optional[int] = Field(default=None, ge=0)
     is_archived: bool = Field(default=False)
-    created_at: Optional[datetime] = Field(default_factory=utc_now)
+    created_at: Optional[datetime] = Field(
+        default_factory=utc_now, sa_type=DateTime(timezone=True)
+    )
 
     sessions: List["TimeSession"] = Relationship(back_populates="category")
 
@@ -24,8 +26,10 @@ class Category(SQLModel, table=True):
 class TimeSession(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     category_id: int = Field(foreign_key="category.id", index=True)
-    start_time: datetime = Field(default_factory=utc_now, index=True)
-    end_time: Optional[datetime] = Field(default=None)
+    start_time: datetime = Field(
+        default_factory=utc_now, index=True, sa_type=DateTime(timezone=True)
+    )
+    end_time: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
     duration_seconds: Optional[int] = Field(default=None, ge=0)
     note: Optional[str] = Field(default=None, max_length=500)
 
