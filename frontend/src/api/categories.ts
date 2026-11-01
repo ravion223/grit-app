@@ -1,0 +1,29 @@
+import api from './client';
+import type { Category, CategoryCreate, CategoryUpdate } from '../types';
+
+export const categoriesApi = {
+  getAll: async (): Promise<Category[]> => {
+    const response = await api.get<Category[]>('/categories/');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Category> => {
+    const response = await api.get<Category>(`/categories/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CategoryCreate): Promise<Category> => {
+    const response = await api.post<Category>('/categories/', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: CategoryUpdate): Promise<Category> => {
+    const response = await api.put<Category>(`/categories/${id}`, data);
+    return response.data;
+  },
+
+  archive: async (id: number): Promise<Category> => {
+    const response = await api.delete<Category>(`/categories/${id}`);
+    return response.data;
+  },
+};
