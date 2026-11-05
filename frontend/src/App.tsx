@@ -1,121 +1,188 @@
-import { useState } from 'react';
-import heroImg from './assets/hero.png';
-import reactLogo from './assets/react.svg';
-import viteLogo from './assets/vite.svg';
-import './App.css';
+import { useMemo, useState } from 'react';
+import { LuCircleAlert, LuRefreshCw, LuX } from 'react-icons/lu';
+import { ActiveTimerHero } from './components/ActiveTimerHero';
+import { ArchiveCategoryModal } from './components/ArchiveCategoryModal';
+import { CategoryGrid } from './components/CategoryGrid';
+import { CategoryModal } from './components/CategoryModal';
+import { HeaderProgress } from './components/HeaderProgress';
+import { SessionHistory } from './components/SessionHistory';
+import { useGritData } from './hooks/useGritData';
+import { useTimer } from './hooks/useTimer';
+import type { Category, CategoryCreate, CategoryUpdate } from './types';
+import { calculateProgress } from './utils/progress';
 
-function App() {
-  const [count, setCount] = useState(0);
+export function App() {
+  const {
+    categories,
+    sessions,
+    activeSession,
+    loading,
+    error,
+    setError,
+    refresh,
+    startOrSwitchSession,
+    stopActiveSession,
+    createCategory,
+    updateCategory,
+    archiveCategory,
+    updateSession,
+    deleteSession,
+  } = useGritData();
+
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [archivingCategory, setArchivingCategory] = useState<Category | null>(
+    null,
+  );
+
+  const activeCategory = useMemo(
+    () => categories.find((c) => c.id === activeSession?.category_id),
+    [categories, activeSession],
+  );
+
+  const elapsedSeconds = useTimer(activeSession, activeCategory);
+
+  const { byCategory: progressByCategory, global: globalProgress } = useMemo(
+    () =>
+      calculateProgress(categories, sessions, activeSession, elapsedSeconds),
+    [categories, sessions, activeSession, elapsedSeconds],
+  );
+
+  const handleOpenNewCategory = () => {
+    setEditingCategory(null);
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleOpenEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (
+    data: CategoryCreate | CategoryUpdate,
+    editingId?: number,
+  ) => {
+    if (editingId !== undefined) {
+      await updateCategory(editingId, data as CategoryUpdate);
+    } else {
+      await createCategory(data as CategoryCreate);
+    }
+  };
+
+  const handleConfirmArchive = async (category: Category) => {
+    try {
+      await archiveCategory(category.id);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to archive category',
+      );
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-[#0e1015] text-zinc-100">
+      <main className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6">
+        {/* Error Banner */}
+        {error && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+            <div className="flex items-center gap-2">
+              <LuCircleAlert className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void refresh()}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-white/[0.08] px-3 py-1 text-xs font-medium text-rose-200 hover:bg-white/[0.14]"
+              >
+                <LuRefreshCw className="h-3 w-3" />
+                <span>Retry</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="cursor-pointer rounded-full p-1 text-rose-300 hover:bg-white/[0.08]"
+              >
+                <LuX className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
 
-      <div className="ticks"></div>
+        {/* 1. Header & Today / Week Progress */}
+        <HeaderProgress
+          globalProgress={globalProgress}
+          onNewCategory={handleOpenNewCategory}
+        />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {loading ? (
+          <div className="space-y-6">
+            <div className="h-44 animate-pulse rounded-3xl bg-white/[0.03]" />
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="h-40 animate-pulse rounded-2xl bg-white/[0.03]"
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 2. Centered Chill Timer Hero */}
+            <ActiveTimerHero
+              activeSession={activeSession}
+              activeCategory={activeCategory}
+              categories={categories}
+              elapsedSeconds={elapsedSeconds}
+              activeCategoryProgress={
+                activeCategory
+                  ? progressByCategory[activeCategory.id]
+                  : undefined
+              }
+              onStartCategory={startOrSwitchSession}
+              onStopSession={stopActiveSession}
+            />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+            {/* 3. Category Cards */}
+            <CategoryGrid
+              categories={categories}
+              progressByCategory={progressByCategory}
+              activeSession={activeSession}
+              activeElapsedSeconds={elapsedSeconds}
+              onStartOrSwitch={startOrSwitchSession}
+              onStop={() => stopActiveSession()}
+              onNewCategory={handleOpenNewCategory}
+              onEditCategory={handleOpenEditCategory}
+              onArchiveCategory={(cat) => setArchivingCategory(cat)}
+            />
+
+            {/* 4. Session Log */}
+            <SessionHistory
+              sessions={sessions}
+              categories={categories}
+              onUpdateSession={updateSession}
+              onDeleteSession={deleteSession}
+            />
+          </>
+        )}
+      </main>
+
+      {/* Create / Edit Category Modal */}
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        editingCategory={editingCategory}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSave={handleSaveCategory}
+      />
+
+      {/* Archive Category Confirmation Modal */}
+      <ArchiveCategoryModal
+        category={archivingCategory}
+        onClose={() => setArchivingCategory(null)}
+        onConfirm={handleConfirmArchive}
+      />
+    </div>
   );
 }
 
