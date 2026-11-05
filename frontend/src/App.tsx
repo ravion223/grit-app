@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { LuCircleAlert, LuRefreshCw, LuX } from 'react-icons/lu';
 import { ActiveTimerHero } from './components/ActiveTimerHero';
 import { ArchiveCategoryModal } from './components/ArchiveCategoryModal';
+import { BackgroundGrit } from './components/BackgroundGrit';
 import { CategoryGrid } from './components/CategoryGrid';
 import { CategoryModal } from './components/CategoryModal';
 import { HeaderProgress } from './components/HeaderProgress';
@@ -80,8 +81,12 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e1015] text-zinc-100">
-      <main className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="relative min-h-screen bg-[#0e1015] text-zinc-100">
+      <BackgroundGrit
+        isActive={activeSession !== null}
+        accentColor={activeCategory?.color || '#10B981'}
+      />
+      <main className="relative z-10 mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6">
         {/* Error Banner */}
         {error && (
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
