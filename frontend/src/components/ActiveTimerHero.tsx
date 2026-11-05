@@ -49,12 +49,37 @@ export function ActiveTimerHero({
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-[#151821] px-6 py-8 sm:px-8">
-      {/* Soft ambient background glow when active */}
+      {/* Horizon Rim Light + Wide Elliptical Beam (zero GPU blur overhead) */}
       {activeSession && (
-        <div
-          className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full opacity-20 blur-3xl transition-colors duration-700"
-          style={{ backgroundColor: accentColor }}
-        />
+        <>
+          {/* Wide elliptical light wash cast downward from the top center (50% 0%) */}
+          <div
+            className="pointer-events-none absolute inset-0 transform-gpu transition-opacity duration-700"
+            style={{
+              background: [
+                `radial-gradient(32% 48% at 50% 0%, ${accentColor}24 0%, transparent 100%)`,
+                `radial-gradient(68% 90% at 50% 0%, ${accentColor}22 0%, ${accentColor}10 38%, ${accentColor}04 68%, transparent 100%)`,
+              ].join(', '),
+            }}
+          />
+
+          {/* 1px colored horizon rim along the top border */}
+          <div
+            className="pointer-events-none absolute inset-x-8 top-0 h-px transform-gpu transition-all duration-700"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${accentColor}55 25%, ${accentColor}d9 50%, ${accentColor}55 75%, transparent 100%)`,
+            }}
+          />
+
+          {/* Subtle specular center highlight on the rim */}
+          <div
+            className="pointer-events-none absolute top-0 left-1/2 h-px w-48 -translate-x-1/2 transform-gpu"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)',
+            }}
+          />
+        </>
       )}
 
       <div className="relative flex flex-col items-center text-center">
