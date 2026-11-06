@@ -222,7 +222,7 @@ function CategoryModalForm({
                   Daily goal (min)
                 </label>
                 {dailyMinutes && Number(dailyMinutes) > 0 && (
-                  <span className="text-[11px] tabular-nums text-zinc-500">
+                  <span className="text-[11px] text-zinc-500 font-normal">
                     {formatMinutesTarget(Number(dailyMinutes))}
                   </span>
                 )}
@@ -233,7 +233,7 @@ function CategoryModalForm({
                 value={dailyMinutes}
                 onChange={(e) => setDailyMinutes(e.target.value)}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-sm tabular-nums text-zinc-100 focus:border-white/[0.2] focus:outline-none"
+                className="w-full rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-100 focus:border-white/[0.2] focus:outline-none"
               />
               <div className="flex flex-wrap gap-1">
                 {DAILY_PRESETS.map((preset) => (
@@ -241,7 +241,7 @@ function CategoryModalForm({
                     key={preset}
                     type="button"
                     onClick={() => setDailyMinutes(String(preset))}
-                    className={`cursor-pointer rounded-md px-2 py-0.5 text-[11px] font-medium tabular-nums transition ${
+                    className={`cursor-pointer rounded-md px-2 py-0.5 text-[11px] font-normal transition ${
                       Number(dailyMinutes) === preset
                         ? 'bg-white/[0.16] text-white'
                         : 'bg-white/[0.04] text-zinc-500 hover:bg-white/[0.08] hover:text-zinc-300'
@@ -260,7 +260,7 @@ function CategoryModalForm({
                   Weekly goal (min)
                 </label>
                 {weeklyMinutes && Number(weeklyMinutes) > 0 && (
-                  <span className="text-[11px] tabular-nums text-zinc-500">
+                  <span className="text-[11px] text-zinc-500 font-normal">
                     {formatMinutesTarget(Number(weeklyMinutes))}
                   </span>
                 )}
@@ -271,7 +271,7 @@ function CategoryModalForm({
                 value={weeklyMinutes}
                 onChange={(e) => setWeeklyMinutes(e.target.value)}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-sm tabular-nums text-zinc-100 focus:border-white/[0.2] focus:outline-none"
+                className="w-full rounded-lg border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-100 focus:border-white/[0.2] focus:outline-none"
               />
               <div className="flex flex-wrap gap-1">
                 {WEEKLY_PRESETS.map((preset) => (
@@ -279,7 +279,7 @@ function CategoryModalForm({
                     key={preset}
                     type="button"
                     onClick={() => setWeeklyMinutes(String(preset))}
-                    className={`cursor-pointer rounded-md px-2 py-0.5 text-[11px] font-medium tabular-nums transition ${
+                    className={`cursor-pointer rounded-md px-2 py-0.5 text-[11px] font-normal transition ${
                       Number(weeklyMinutes) === preset
                         ? 'bg-white/[0.16] text-white'
                         : 'bg-white/[0.04] text-zinc-500 hover:bg-white/[0.08] hover:text-zinc-300'

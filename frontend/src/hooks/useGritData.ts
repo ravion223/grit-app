@@ -21,7 +21,7 @@ export function useGritData() {
     try {
       const [catsData, sessionsData, activeData] = await Promise.all([
         categoriesApi.getAll(),
-        sessionsApi.getAll({ limit: 100 }),
+        sessionsApi.getAll({ limit: 2000 }),
         sessionsApi.getActive(),
       ]);
       setCategories(catsData);
@@ -75,7 +75,7 @@ export function useGritData() {
     try {
       const started = await sessionsApi.start({ category_id: categoryId });
       setActiveSession(started);
-      const updatedSessions = await sessionsApi.getAll({ limit: 100 });
+      const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
       setSessions(updatedSessions);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start session');
@@ -90,7 +90,7 @@ export function useGritData() {
         await sessionsApi.update(stopped.id, { note: optionalNote.trim() });
       }
       setActiveSession(null);
-      const updatedSessions = await sessionsApi.getAll({ limit: 100 });
+      const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
       setSessions(updatedSessions);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to stop session');
@@ -121,7 +121,7 @@ export function useGritData() {
       if (activeSession?.category_id === id) {
         setActiveSession(null);
       }
-      const updatedSessions = await sessionsApi.getAll({ limit: 100 });
+      const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
       setSessions(updatedSessions);
     },
     [activeSession],
