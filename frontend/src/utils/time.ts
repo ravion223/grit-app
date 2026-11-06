@@ -107,3 +107,162 @@ export function formatSessionTimestamp(isoString: string): string {
   });
   return `${dateStr}, ${timeStr}`;
 }
+
+/**
+ * Returns local month key in YYYY-MM format (e.g. "2026-11").
+ */
+export function getMonthKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+/**
+ * Returns local day key in YYYY-MM-DD format (e.g. "2026-11-06").
+ */
+export function getDayKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Shifts a YYYY-MM month key by deltaMonths (e.g. -1 for previous month, +1 for next month).
+ */
+export function shiftMonthKey(monthKey: string, deltaMonths: number): string {
+  const [yStr, mStr] = monthKey.split('-');
+  const year = parseInt(yStr, 10);
+  const monthIndex = parseInt(mStr, 10) - 1;
+  if (Number.isNaN(year) || Number.isNaN(monthIndex)) {
+    return getMonthKey();
+  }
+  const shifted = new Date(year, monthIndex + deltaMonths, 1);
+  return getMonthKey(shifted);
+}
+
+/**
+ * Formats a YYYY-MM string into a full month & year label (e.g. "November 2026").
+ */
+export function formatMonthLabel(monthKey: string): string {
+  const [yStr, mStr] = monthKey.split('-');
+  const year = parseInt(yStr, 10);
+  const monthIndex = parseInt(mStr, 10) - 1;
+  if (Number.isNaN(year) || Number.isNaN(monthIndex)) return monthKey;
+  const date = new Date(year, monthIndex, 1);
+  return date.toLocaleDateString([], { month: 'long', year: 'numeric' });
+}
+
+/**
+ * Formats a YYYY-MM string into a short month & year label (e.g. "Nov 2026").
+ */
+export function formatMonthShort(monthKey: string): string {
+  const [yStr, mStr] = monthKey.split('-');
+  const year = parseInt(yStr, 10);
+  const monthIndex = parseInt(mStr, 10) - 1;
+  if (Number.isNaN(year) || Number.isNaN(monthIndex)) return monthKey;
+  const date = new Date(year, monthIndex, 1);
+  return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
+}
+
+/**
+ * Returns total calendar days in a YYYY-MM month and elapsed days so far (for current month averages).
+ */
+export function getMonthDayCounts(
+  monthKey: string,
+  now = new Date(),
+): { totalDaysInMonth: number; elapsedDaysInMonth: number } {
+  const [yStr, mStr] = monthKey.split('-');
+  const year = parseInt(yStr, 10);
+  const month = parseInt(mStr, 10); // 1..12
+  if (Number.isNaN(year) || Number.isNaN(month)) {
+    return { totalDaysInMonth: 30, elapsedDaysInMonth: 30 };
+  }
+  const totalDaysInMonth = new Date(year, month, 0).getDate();
+  const currentMonthKey = getMonthKey(now);
+
+  if (monthKey === currentMonthKey) {
+    return {
+      totalDaysInMonth,
+      elapsedDaysInMonth: Math.max(1, now.getDate()),
+    };
+  }
+  return {
+    totalDaysInMonth,
+    elapsedDaysInMonth: totalDaysInMonth,
+  };
+}
+
+/**
+ * Formats a YYYY-MM-DD key into a friendly header for daily groupings.
+ */
+export function formatDayGroupHeader(
+  dayKey: string,
+  now = new Date(),
+): {
+  primary: string;
+  secondary: string;
+  isToday: boolean;
+} {
+  const todayKey = getDayKey(now);
+  const yesterday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - 1,
+  );
+  const yesterdayKey = getDayKey(yesterday);
+
+  const [yStr, mStr, dStr] = dayKey.split('-');
+  const date = new Date(
+    parseInt(yStr, 10),
+    parseInt(mStr, 10) - 1,
+    parseInt(dStr, 10),
+  );
+
+  const weekdayShort = date.toLocaleDateString([], {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  if (dayKey === todayKey) {
+    return {
+      primary: 'Today',
+      secondary: `${weekdayShort} · ${dayKey}`,
+      isToday: true,
+    };
+  }
+  if (dayKey === yesterdayKey) {
+    return {
+      primary: 'Yesterday',
+      secondary: `${weekdayShort} · ${dayKey}`,
+      isToday: false,
+    };
+  }
+  return {
+    primary: weekdayShort,
+    secondary: dayKey,
+    isToday: false,
+  };
+}
+
+/**
+ * Formats a session's start and end timestamps into a concise local time range (e.g., "14:15 – 15:00").
+ */
+export function formatSessionTimeRange(
+  startIso: string,
+  endIso: string | null,
+): string {
+  const startDate = parseBackendDate(startIso);
+  const startStr = startDate.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  if (!endIso) return startStr;
+  const endDate = parseBackendDate(endIso);
+  const endStr = endDate.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${startStr} – ${endStr}`;
+}

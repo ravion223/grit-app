@@ -3,6 +3,7 @@ import type { SessionCreate, SessionUpdate, TimeSession } from '../types';
 
 export interface GetSessionsParams {
   category_id?: number;
+  month?: string;
   limit?: number;
   offset?: number;
 }
