@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -100,19 +101,45 @@ def get_all_sessions(
     category_id: Optional[int] = Query(
         default=None, description="Filter by category ID"
     ),
+    month: Optional[str] = Query(
+        default=None,
+        pattern=r"^\d{4}-\d{2}$",
+        description="Filter by month in YYYY-MM format (UTC)",
+    ),
     limit: int = Query(
-        default=50, ge=1, le=100, description="Max number of sessions to return"
+        default=500, ge=1, le=10000, description="Max number of sessions to return"
     ),
     offset: int = Query(default=0, ge=0, description="Number of sessions to skip"),
     db: Session = Depends(get_session),
 ):
     """
-    Returns the history of all sessions with optional category filter and pagination.
+    Returns the history of all sessions with optional category/month filter
+    and pagination.
     """
     statement = select(models.TimeSession)
 
     if category_id is not None:
         statement = statement.where(models.TimeSession.category_id == category_id)
+
+    if month is not None:
+        try:
+            year_str, month_str = month.split("-")
+            year, mon = int(year_str), int(month_str)
+            if not (1 <= mon <= 12):
+                raise ValueError
+            start_dt = datetime(year, mon, 1, tzinfo=timezone.utc)
+            if mon == 12:
+                end_dt = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                end_dt = datetime(year, mon + 1, 1, tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Invalid month format. Expected YYYY-MM"
+            )
+        statement = statement.where(
+            col(models.TimeSession.start_time) >= start_dt,
+            col(models.TimeSession.start_time) < end_dt,
+        )
 
     statement = (
         statement.order_by(col(models.TimeSession.start_time).desc())
