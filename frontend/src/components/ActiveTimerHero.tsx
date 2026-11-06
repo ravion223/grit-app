@@ -108,8 +108,8 @@ export function ActiveTimerHero({
           </span>
         )}
 
-        {/* Main Timer Readout — Smooth Sans-Serif with Tabular Nums */}
-        <div className="my-4 text-6xl font-semibold tracking-tight tabular-nums text-zinc-100 sm:text-7xl">
+        {/* Main Timer Readout — Smooth, Chill Sans-Serif */}
+        <div className="my-4 text-6xl font-medium tracking-tight text-zinc-100 sm:text-7xl">
           {formatStopwatch(elapsedSeconds, false)}
         </div>
 

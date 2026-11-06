@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { LuCheck, LuPencil, LuTrash2, LuX } from 'react-icons/lu';
 import type { Category, SessionUpdate, TimeSession } from '../types';
-import { formatDurationHuman, formatSessionTimestamp } from '../utils/time';
+import {
+  formatDurationHuman,
+  formatSessionTimeRange,
+  formatSessionTimestamp,
+} from '../utils/time';
 import { CategoryIcon } from './CategoryIcon';
 
 interface SessionRowProps {
   session: TimeSession;
   category: Category | undefined;
+  compactDate?: boolean;
   onUpdate: (id: number, data: SessionUpdate) => Promise<TimeSession>;
   onDelete: (id: number) => Promise<void>;
 }
@@ -14,6 +19,7 @@ interface SessionRowProps {
 export function SessionRow({
   session,
   category,
+  compactDate = false,
   onUpdate,
   onDelete,
 }: SessionRowProps) {
@@ -83,8 +89,10 @@ export function SessionRow({
               {category?.name ?? 'Archived'}
             </span>
             <span className="text-[11px] text-zinc-600">•</span>
-            <span className="text-[11px] text-zinc-500">
-              {formatSessionTimestamp(session.start_time)}
+            <span className="text-[11px] font-normal text-zinc-500">
+              {compactDate
+                ? formatSessionTimeRange(session.start_time, session.end_time)
+                : formatSessionTimestamp(session.start_time)}
             </span>
           </div>
 
@@ -106,13 +114,13 @@ export function SessionRow({
             className="w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-200 focus:border-white/[0.2] focus:outline-none sm:w-44"
           />
 
-          <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-xs tabular-nums">
+          <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-xs">
             <input
               type="number"
               min={0}
               value={editMinutes}
               onChange={(e) => setEditMinutes(e.target.value)}
-              className="w-10 text-xs tabular-nums text-zinc-100 focus:outline-none"
+              className="w-10 text-xs font-normal text-zinc-100 focus:outline-none"
               title="Minutes"
             />
             <span className="text-zinc-500">m</span>
@@ -122,7 +130,7 @@ export function SessionRow({
               max={59}
               value={editSeconds}
               onChange={(e) => setEditSeconds(e.target.value)}
-              className="w-9 text-xs tabular-nums text-zinc-100 focus:outline-none"
+              className="w-9 text-xs font-normal text-zinc-100 focus:outline-none"
               title="Seconds"
             />
             <span className="text-zinc-500">s</span>
@@ -149,7 +157,7 @@ export function SessionRow({
         </div>
       ) : (
         <div className="flex items-center justify-between gap-2 sm:justify-end">
-          <span className="text-xs font-medium tabular-nums text-zinc-300">
+          <span className="text-xs font-medium text-zinc-300">
             {formatDurationHuman(durationSeconds)}
           </span>
 

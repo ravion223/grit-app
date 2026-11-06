@@ -92,7 +92,7 @@ export function CategoryCard({
 
             {isActive ? (
               <span
-                className="inline-flex items-center gap-1.5 text-xs font-medium tabular-nums"
+                className="inline-flex items-center gap-1.5 text-xs font-medium"
                 style={{ color: category.color }}
               >
                 <span
@@ -102,7 +102,7 @@ export function CategoryCard({
                 {formatStopwatch(activeElapsedSeconds, false)}
               </span>
             ) : (
-              <span className="text-xs tabular-nums text-zinc-500">
+              <span className="text-xs text-zinc-500 font-normal">
                 {dailySeconds > 0
                   ? `${formatDurationHuman(dailySeconds)} today`
                   : 'No time today'}
@@ -157,7 +157,7 @@ export function CategoryCard({
       <div className="mt-5 space-y-3">
         {/* Daily */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] tabular-nums">
+          <div className="flex items-center justify-between text-[11px]">
             <span className="text-zinc-500">Today</span>
             <span className="text-zinc-400">
               {formatDurationHuman(dailySeconds)}
@@ -186,7 +186,7 @@ export function CategoryCard({
 
         {/* Weekly */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] tabular-nums">
+          <div className="flex items-center justify-between text-[11px]">
             <span className="text-zinc-500">Week</span>
             <span className="text-zinc-400">
               {formatDurationHuman(weeklySeconds)}

@@ -65,7 +65,7 @@ export function HeaderProgress({
                 </span>
               )}
             </div>
-            <div className="text-xs tabular-nums text-zinc-400">
+            <div className="text-xs text-zinc-400">
               <span className="text-sm font-semibold text-zinc-100">
                 {formatDurationHuman(dailyLoggedSeconds)}
               </span>
@@ -108,7 +108,7 @@ export function HeaderProgress({
                 </span>
               )}
             </div>
-            <div className="text-xs tabular-nums text-zinc-400">
+            <div className="text-xs text-zinc-400">
               <span className="text-sm font-semibold text-zinc-100">
                 {formatDurationHuman(weeklyLoggedSeconds)}
               </span>
