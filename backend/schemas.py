@@ -26,3 +26,10 @@ class SessionUpdate(BaseModel):
 
 class SessionCreate(BaseModel):
     category_id: int
+
+
+class DailyLogUpsert(BaseModel):
+    mood_score: Optional[int] = Field(default=None, ge=1, le=5)
+    focus_level: Optional[int] = Field(default=None, ge=1, le=5)
+    is_cookie_jar: Optional[bool] = Field(default=False)
+    journal_entry: Optional[str] = Field(default=None, max_length=2000)
