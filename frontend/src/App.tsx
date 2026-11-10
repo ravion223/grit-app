@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { LuCircleAlert, LuRefreshCw, LuX } from 'react-icons/lu';
+import { AccountabilityModal } from './components/AccountabilityModal';
 import { ActiveTimerHero } from './components/ActiveTimerHero';
 import { ArchiveCategoryModal } from './components/ArchiveCategoryModal';
 import { BackgroundGrit } from './components/BackgroundGrit';
@@ -9,13 +10,20 @@ import { HeaderProgress } from './components/HeaderProgress';
 import { SessionHistory } from './components/SessionHistory';
 import { useGritData } from './hooks/useGritData';
 import { useTimer } from './hooks/useTimer';
-import type { Category, CategoryCreate, CategoryUpdate } from './types';
+import type {
+  Category,
+  CategoryCreate,
+  CategoryUpdate,
+  DailyLogUpsert,
+} from './types';
 import { calculateProgress } from './utils/progress';
+import { getDayKey } from './utils/time';
 
 export function App() {
   const {
     categories,
     sessions,
+    dailyLogsMap,
     activeSession,
     loading,
     error,
@@ -28,12 +36,24 @@ export function App() {
     archiveCategory,
     updateSession,
     deleteSession,
+    upsertDailyLog,
+    deleteDailyLog,
   } = useGritData();
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [archivingCategory, setArchivingCategory] = useState<Category | null>(
     null,
+  );
+  const [isShutdownModalOpen, setIsShutdownModalOpen] = useState(false);
+  const [shutdownDate, setShutdownDate] = useState<string | undefined>(
+    undefined,
+  );
+
+  const todayKey = useMemo(() => getDayKey(), []);
+  const hasShutdownToday = useMemo(
+    () => dailyLogsMap.has(todayKey),
+    [dailyLogsMap, todayKey],
   );
 
   const activeCategory = useMemo(
@@ -48,6 +68,11 @@ export function App() {
       calculateProgress(categories, sessions, activeSession, elapsedSeconds),
     [categories, sessions, activeSession, elapsedSeconds],
   );
+
+  const handleOpenShutdown = (date?: string) => {
+    setShutdownDate(date || todayKey);
+    setIsShutdownModalOpen(true);
+  };
 
   const handleOpenNewCategory = () => {
     setEditingCategory(null);
@@ -78,6 +103,10 @@ export function App() {
         err instanceof Error ? err.message : 'Failed to archive category',
       );
     }
+  };
+
+  const handleSaveDailyLog = async (logDate: string, data: DailyLogUpsert) => {
+    return await upsertDailyLog(logDate, data);
   };
 
   return (
@@ -118,6 +147,8 @@ export function App() {
         <HeaderProgress
           globalProgress={globalProgress}
           onNewCategory={handleOpenNewCategory}
+          onOpenShutdown={() => handleOpenShutdown(todayKey)}
+          hasShutdownToday={hasShutdownToday}
         />
 
         {loading ? (
@@ -186,6 +217,20 @@ export function App() {
         category={archivingCategory}
         onClose={() => setArchivingCategory(null)}
         onConfirm={handleConfirmArchive}
+      />
+
+      {/* Daily Shutdown Ritual / Accountability Mirror Modal */}
+      <AccountabilityModal
+        isOpen={isShutdownModalOpen}
+        initialDate={shutdownDate}
+        onClose={() => setIsShutdownModalOpen(false)}
+        categories={categories}
+        sessions={sessions}
+        activeSession={activeSession}
+        onStopActiveSession={stopActiveSession}
+        onSaveDailyLog={handleSaveDailyLog}
+        onDeleteDailyLog={deleteDailyLog}
+        existingLogs={dailyLogsMap}
       />
     </div>
   );

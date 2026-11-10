@@ -1,15 +1,19 @@
-import { LuCheck, LuPlus } from 'react-icons/lu';
+import { LuCheck, LuFlame, LuPlus } from 'react-icons/lu';
 import type { GlobalProgress } from '../types';
 import { formatDurationHuman } from '../utils/time';
 
 interface HeaderProgressProps {
   globalProgress: GlobalProgress;
   onNewCategory: () => void;
+  onOpenShutdown: () => void;
+  hasShutdownToday?: boolean;
 }
 
 export function HeaderProgress({
   globalProgress,
   onNewCategory,
+  onOpenShutdown,
+  hasShutdownToday = false,
 }: HeaderProgressProps) {
   const todayLabel = new Date().toLocaleDateString([], {
     weekday: 'long',
@@ -42,14 +46,35 @@ export function HeaderProgress({
           <p className="text-xs text-zinc-500">{todayLabel}</p>
         </div>
 
-        <button
-          type="button"
-          onClick={onNewCategory}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.1] active:scale-[0.98]"
-        >
-          <LuPlus className="h-3.5 w-3.5 text-zinc-400" />
-          <span>New category</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenShutdown}
+            className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition active:scale-[0.98] ${
+              hasShutdownToday
+                ? 'border border-indigo-500/30 bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25'
+                : 'bg-white/[0.06] text-zinc-200 hover:bg-white/[0.1]'
+            }`}
+          >
+            <LuFlame
+              className={`h-3.5 w-3.5 ${
+                hasShutdownToday ? 'text-indigo-400' : 'text-zinc-400'
+              }`}
+            />
+            <span>
+              {hasShutdownToday ? 'Mirror Reviewed' : 'Shutdown Ritual'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onNewCategory}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.1] active:scale-[0.98]"
+          >
+            <LuPlus className="h-3.5 w-3.5 text-zinc-400" />
+            <span>New category</span>
+          </button>
+        </div>
       </div>
 
       {/* Chill Daily & Weekly Progress Summary */}
