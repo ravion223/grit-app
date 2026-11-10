@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { categoriesApi } from '../api/categories';
+import { dailyLogsApi } from '../api/dailyLogs';
 import { sessionsApi } from '../api/sessions';
 import type {
   Category,
   CategoryCreate,
   CategoryUpdate,
+  DailyLog,
+  DailyLogUpsert,
   SessionUpdate,
   TimeSession,
 } from '../types';
@@ -12,6 +15,7 @@ import type {
 export function useGritData() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [sessions, setSessions] = useState<TimeSession[]>([]);
+  const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
   const [activeSession, setActiveSession] = useState<TimeSession | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +23,16 @@ export function useGritData() {
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [catsData, sessionsData, activeData] = await Promise.all([
+      const [catsData, sessionsData, activeData, logsData] = await Promise.all([
         categoriesApi.getAll(),
         sessionsApi.getAll({ limit: 2000 }),
         sessionsApi.getActive(),
+        dailyLogsApi.getAll(),
       ]);
       setCategories(catsData);
       setSessions(sessionsData);
       setActiveSession(activeData);
+      setDailyLogs(logsData);
     } catch (err) {
       const msg =
         err instanceof Error
@@ -40,15 +46,18 @@ export function useGritData() {
     let cancelled = false;
     (async () => {
       try {
-        const [catsData, sessionsData, activeData] = await Promise.all([
-          categoriesApi.getAll(),
-          sessionsApi.getAll({ limit: 100 }),
-          sessionsApi.getActive(),
-        ]);
+        const [catsData, sessionsData, activeData, logsData] =
+          await Promise.all([
+            categoriesApi.getAll(),
+            sessionsApi.getAll({ limit: 100 }),
+            sessionsApi.getActive(),
+            dailyLogsApi.getAll(),
+          ]);
         if (!cancelled) {
           setCategories(catsData);
           setSessions(sessionsData);
           setActiveSession(activeData);
+          setDailyLogs(logsData);
           setError(null);
         }
       } catch (err) {
@@ -68,6 +77,31 @@ export function useGritData() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  const dailyLogsMap = useMemo(
+    () => new Map(dailyLogs.map((log) => [log.log_date, log])),
+    [dailyLogs],
+  );
+
+  const upsertDailyLog = useCallback(
+    async (logDate: string, data: DailyLogUpsert) => {
+      const saved = await dailyLogsApi.upsert(logDate, data);
+      setDailyLogs((prev) => {
+        const exists = prev.some((l) => l.log_date === logDate);
+        if (exists) {
+          return prev.map((l) => (l.log_date === logDate ? saved : l));
+        }
+        return [saved, ...prev];
+      });
+      return saved;
+    },
+    [],
+  );
+
+  const deleteDailyLog = useCallback(async (logDate: string) => {
+    await dailyLogsApi.delete(logDate);
+    setDailyLogs((prev) => prev.filter((l) => l.log_date !== logDate));
   }, []);
 
   const startOrSwitchSession = useCallback(async (categoryId: number) => {
@@ -141,6 +175,8 @@ export function useGritData() {
   return {
     categories,
     sessions,
+    dailyLogs,
+    dailyLogsMap,
     activeSession,
     loading,
     error,
@@ -153,5 +189,7 @@ export function useGritData() {
     archiveCategory,
     updateSession,
     deleteSession,
+    upsertDailyLog,
+    deleteDailyLog,
   };
 }
