@@ -54,23 +54,33 @@ export function RatingSlider({
             <div
               className="h-full rounded-full transition-all duration-150"
               style={{
-                width: `${percentage}%`,
+                width:
+                  value !== null
+                    ? value === 5
+                      ? '100%'
+                      : `calc(${percentage}% + ${(0.5 - percentage / 100) * 24}px)`
+                    : '0%',
                 backgroundColor: activeDescriptor?.color ?? '#6366f1',
-                opacity: value !== null ? 0.35 : 0.12,
+                opacity: 0.35,
               }}
             />
           </div>
 
           {/* Step markers along the track */}
-          <div className="pointer-events-none absolute inset-x-0 flex justify-between px-3">
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2">
             {[1, 2, 3, 4, 5].map((step) => {
+              const stepFraction = (step - 1) / 4;
               const isPast = value !== null && step <= value;
               return (
                 <span
                   key={step}
-                  className={`h-1 w-1 rounded-full transition-all duration-200 ${
-                    isPast ? 'bg-white/30' : 'bg-white/10'
+                  className={`absolute top-1/2 h-1 w-1 -translate-y-1/2 rounded-full transition-all duration-200 ${
+                    isPast ? 'bg-white/40' : 'bg-white/10'
                   }`}
+                  style={{
+                    left: `calc(${stepFraction * 100}% + ${(0.5 - stepFraction) * 24}px)`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
                 />
               );
             })}
