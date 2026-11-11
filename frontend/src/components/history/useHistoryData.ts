@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Category, TimeSession } from '../../types';
+import type { Category, DailyLog, TimeSession } from '../../types';
 import {
   getDayKey,
   getMonthDayCounts,
@@ -18,6 +18,7 @@ import type {
 interface UseHistoryDataParams {
   sessions: TimeSession[];
   categories: Category[];
+  dailyLogsMap: Map<string, DailyLog>;
   selectedMonth: string;
   selectedCategory: CategoryFilterValue;
   sortOrder: 'desc' | 'asc';
@@ -27,6 +28,7 @@ interface UseHistoryDataParams {
 export function useHistoryData({
   sessions,
   categories,
+  dailyLogsMap,
   selectedMonth,
   selectedCategory,
   sortOrder,
@@ -56,6 +58,13 @@ export function useHistoryData({
       map.set(mKey, prev);
     }
 
+    for (const logDate of dailyLogsMap.keys()) {
+      const mKey = logDate.slice(0, 7);
+      if (!map.has(mKey)) {
+        map.set(mKey, { count: 0, totalSeconds: 0 });
+      }
+    }
+
     return Array.from(map.entries())
       .map(([monthKey, stats]) => ({
         monthKey,
@@ -63,7 +72,7 @@ export function useHistoryData({
         totalSeconds: stats.totalSeconds,
       }))
       .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-  }, [allCompletedSessions, currentMonthKey]);
+  }, [allCompletedSessions, dailyLogsMap, currentMonthKey]);
 
   // Sessions within the selected YYYY-MM month
   const monthSessions = useMemo(
@@ -290,6 +299,18 @@ export function useHistoryData({
       groupsMap.set(dKey, existing);
     }
 
+    if (activeFilter === 'all') {
+      for (const logDate of dailyLogsMap.keys()) {
+        if (logDate.startsWith(selectedMonth) && !groupsMap.has(logDate)) {
+          groupsMap.set(logDate, {
+            sessions: [],
+            totalSeconds: 0,
+            catSeconds: new Map<number | 'archived', number>(),
+          });
+        }
+      }
+    }
+
     const groups: DailyGroup[] = Array.from(groupsMap.entries()).map(
       ([dayKey, data]) => {
         const perCategoryTotals: DailyCategoryTotal[] = Array.from(
@@ -321,6 +342,7 @@ export function useHistoryData({
           totalSeconds: data.totalSeconds,
           sessions: data.sessions,
           perCategoryTotals,
+          dailyLog: dailyLogsMap.get(dayKey) ?? null,
         };
       },
     );
@@ -332,7 +354,14 @@ export function useHistoryData({
     );
 
     return groups;
-  }, [filteredSessions, categoryMap, sortOrder]);
+  }, [
+    filteredSessions,
+    categoryMap,
+    sortOrder,
+    activeFilter,
+    dailyLogsMap,
+    selectedMonth,
+  ]);
 
   const activeFilterLabel = useMemo(() => {
     if (activeFilter === 'all') return 'All Categories';

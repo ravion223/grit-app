@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy import Index, text
@@ -43,3 +43,18 @@ class TimeSession(SQLModel, table=True):
     note: Optional[str] = Field(default=None, max_length=500)
 
     category: Optional[Category] = Relationship(back_populates="sessions")
+
+
+class DailyLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    log_date: date = Field(unique=True, index=True, nullable=False)
+    mood_score: Optional[int] = Field(default=None, ge=1, le=5)
+    focus_level: Optional[int] = Field(default=None, ge=1, le=5)
+    is_cookie_jar: bool = Field(default=False)
+    journal_entry: Optional[str] = Field(default=None, max_length=2000)
+    created_at: Optional[datetime] = Field(
+        default_factory=utc_now, sa_type=DateTime(timezone=True)
+    )
+    updated_at: Optional[datetime] = Field(
+        default_factory=utc_now, sa_type=DateTime(timezone=True)
+    )

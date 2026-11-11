@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { sessionsApi } from '../api/sessions';
-import type { Category, SessionUpdate, TimeSession } from '../types';
+import type { Category, DailyLog, SessionUpdate, TimeSession } from '../types';
 import { exportSessionsToCsv } from '../utils/csv';
 import { getDayKey, getMonthKey } from '../utils/time';
-import { CategoryFilterTabs } from './history/CategoryFilterTabs';
 import { DailySessionGroup } from './history/DailySessionGroup';
 import { EmptyHistory } from './history/EmptyHistory';
 import { ExportMenu } from './history/ExportMenu';
@@ -17,15 +16,19 @@ import { SessionRow } from './SessionRow';
 interface SessionHistoryProps {
   sessions: TimeSession[];
   categories: Category[];
+  dailyLogsMap: Map<string, DailyLog>;
   onUpdateSession: (id: number, data: SessionUpdate) => Promise<TimeSession>;
   onDeleteSession: (id: number) => Promise<void>;
+  onOpenShutdown: (dayKey: string) => void;
 }
 
 export function SessionHistory({
   sessions,
   categories,
+  dailyLogsMap,
   onUpdateSession,
   onDeleteSession,
+  onOpenShutdown,
 }: SessionHistoryProps) {
   const currentMonthKey = useMemo(() => getMonthKey(), []);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
@@ -38,7 +41,6 @@ export function SessionHistory({
     categoryMap,
     allCompletedSessions,
     availableMonths,
-    monthSessions,
     elapsedDaysInMonth,
     categorySummaries,
     monthTotalSeconds,
@@ -51,6 +53,7 @@ export function SessionHistory({
   } = useHistoryData({
     sessions,
     categories,
+    dailyLogsMap,
     selectedMonth,
     selectedCategory,
     sortOrder,
@@ -114,16 +117,7 @@ export function SessionHistory({
         </div>
       </div>
 
-      {/* 2. Category Filter Tabs */}
-      <CategoryFilterTabs
-        activeFilter={activeFilter}
-        monthTotalSeconds={monthTotalSeconds}
-        monthSessionsCount={monthSessions.length}
-        categorySummaries={categorySummaries}
-        onSelectCategory={(val) => setSelectedCategory(val)}
-      />
-
-      {/* 3. Aggregated Monthly & Daily Totals Panel */}
+      {/* 2. Aggregated Monthly & Daily Totals Panel */}
       <MonthlyAggregates
         selectedMonth={selectedMonth}
         activeFilter={activeFilter}
@@ -135,7 +129,7 @@ export function SessionHistory({
         onSelectCategory={(val) => setSelectedCategory(val)}
       />
 
-      {/* 4. Chronological Session List Toolbar */}
+      {/* 3. Chronological Session List Toolbar */}
       <SessionListToolbar
         filteredSessionsCount={filteredSessions.length}
         groupByDay={groupByDay}
@@ -146,8 +140,21 @@ export function SessionHistory({
         }
       />
 
-      {/* 5. Session List Content */}
-      {filteredSessions.length === 0 ? (
+      {/* 4. Session List Content */}
+      {groupByDay && dailyGroups.length > 0 ? (
+        <div className="space-y-3">
+          {dailyGroups.map((group) => (
+            <DailySessionGroup
+              key={group.dayKey}
+              group={group}
+              categoryMap={categoryMap}
+              onUpdateSession={onUpdateSession}
+              onDeleteSession={onDeleteSession}
+              onOpenShutdown={onOpenShutdown}
+            />
+          ))}
+        </div>
+      ) : filteredSessions.length === 0 ? (
         <EmptyHistory
           selectedMonth={selectedMonth}
           activeFilter={activeFilter}
@@ -159,18 +166,6 @@ export function SessionHistory({
             setSelectedCategory('all');
           }}
         />
-      ) : groupByDay ? (
-        <div className="space-y-3">
-          {dailyGroups.map((group) => (
-            <DailySessionGroup
-              key={group.dayKey}
-              group={group}
-              categoryMap={categoryMap}
-              onUpdateSession={onUpdateSession}
-              onDeleteSession={onDeleteSession}
-            />
-          ))}
-        </div>
       ) : (
         <div className="rounded-2xl border border-white/[0.05] bg-[#151821] p-2">
           <div className="divide-y divide-white/[0.04]">

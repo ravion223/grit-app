@@ -1,4 +1,4 @@
-import type { TimeSession } from '../../types';
+import type { DailyLog, TimeSession } from '../../types';
 
 export type CategoryFilterValue = 'all' | 'archived' | number;
 
@@ -29,6 +29,7 @@ export interface DailyGroup {
   totalSeconds: number;
   sessions: TimeSession[];
   perCategoryTotals: DailyCategoryTotal[];
+  dailyLog: DailyLog | null;
 }
 
 export interface MonthStat {

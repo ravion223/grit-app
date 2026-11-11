@@ -65,3 +65,21 @@ export interface GlobalProgress {
   completedDailyCategories: number;
   totalCategoriesWithDailyGoal: number;
 }
+
+export interface DailyLog {
+  id: number;
+  log_date: string; // YYYY-MM-DD
+  mood_score: number | null; // 1-5
+  focus_level: number | null; // 1-5
+  is_cookie_jar: boolean;
+  journal_entry: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyLogUpsert {
+  mood_score?: number | null;
+  focus_level?: number | null;
+  is_cookie_jar?: boolean;
+  journal_entry?: string | null;
+}

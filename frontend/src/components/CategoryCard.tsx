@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { LuArchive, LuCheck, LuPencil, LuPlay, LuSquare } from 'react-icons/lu';
+import {
+  LuArchive,
+  LuCheck,
+  LuPencil,
+  LuPlay,
+  LuSquare,
+  LuTimer,
+} from 'react-icons/lu';
 import type { Category, CategoryProgress } from '../types';
 import { formatDurationHuman, formatStopwatch } from '../utils/time';
 import { CategoryIcon } from './CategoryIcon';
@@ -95,10 +102,7 @@ export function CategoryCard({
                 className="inline-flex items-center gap-1.5 text-xs font-medium"
                 style={{ color: category.color }}
               >
-                <span
-                  className="animate-pulse-subtle h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                />
+                <LuTimer className="h-3 w-3" />
                 {formatStopwatch(activeElapsedSeconds, false)}
               </span>
             ) : (
