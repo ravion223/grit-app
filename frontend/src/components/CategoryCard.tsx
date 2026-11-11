@@ -66,9 +66,10 @@ export function CategoryCard({
           : 'rgba(255, 255, 255, 0.05)',
       }}
     >
-      {/* Top Row: Icon, Name, Play/Stop button */}
-      <div className="flex items-start justify-between gap-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      {/* Top Section: Icon, Actions, and Full-Width Category Title */}
+      <div>
+        {/* Row 1: Icon on left, Actions & Play/Stop on right */}
+        <div className="flex items-center justify-between">
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
             style={{
@@ -79,81 +80,76 @@ export function CategoryCard({
             <CategoryIcon iconKey={category.icon} className="h-5 w-5" />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <h3
-                className="truncate text-sm font-semibold text-zinc-100"
-                title={category.name}
+          <div className="flex shrink-0 items-center gap-1">
+            <div className="flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => onEdit(category)}
+                title="Edit"
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200"
               >
-                {category.name}
-              </h3>
-              {isDailyComplete && (
-                <span
-                  title="Daily goal reached"
-                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"
-                >
-                  <LuCheck className="h-2.5 w-2.5" />
-                </span>
-              )}
+                <LuPencil className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onArchive(category)}
+                title="Archive"
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition hover:bg-rose-500/10 hover:text-rose-400"
+              >
+                <LuArchive className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            {isActive ? (
-              <span
-                className="inline-flex items-center gap-1.5 text-xs font-medium"
-                style={{ color: category.color }}
-              >
-                <LuTimer className="h-3 w-3" />
-                {formatStopwatch(activeElapsedSeconds, false)}
-              </span>
-            ) : (
-              <span className="text-xs text-zinc-500 font-normal">
-                {dailySeconds > 0
-                  ? `${formatDurationHuman(dailySeconds)} today`
-                  : 'No time today'}
-              </span>
-            )}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleAction}
+              title={isActive ? 'Stop' : `Focus on ${category.name}`}
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition active:scale-95 disabled:opacity-50"
+              style={{
+                backgroundColor: isActive
+                  ? 'rgba(244, 63, 94, 0.16)'
+                  : `${category.color}22`,
+                color: isActive ? '#fb7185' : category.color,
+              }}
+            >
+              {isActive ? (
+                <LuSquare className="h-3.5 w-3.5 fill-current" />
+              ) : (
+                <LuPlay className="h-3.5 w-3.5 translate-x-[0.5px] fill-current" />
+              )}
+            </button>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              type="button"
-              onClick={() => onEdit(category)}
-              title="Edit"
-              className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200"
+        {/* Row 2: Full-Width Category Name & Active Timer */}
+        <div className="mt-3.5 space-y-1">
+          <div className="flex items-center gap-1.5">
+            <h3
+              className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-100"
+              title={category.name}
             >
-              <LuPencil className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onArchive(category)}
-              title="Archive"
-              className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition hover:bg-rose-500/10 hover:text-rose-400"
-            >
-              <LuArchive className="h-3.5 w-3.5" />
-            </button>
+              {category.name}
+            </h3>
+            {isDailyComplete && (
+              <span
+                title="Daily goal reached"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"
+              >
+                <LuCheck className="h-2.5 w-2.5" />
+              </span>
+            )}
           </div>
 
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleAction}
-            title={isActive ? 'Stop' : `Focus on ${category.name}`}
-            className="ml-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition active:scale-95 disabled:opacity-50"
-            style={{
-              backgroundColor: isActive
-                ? 'rgba(244, 63, 94, 0.16)'
-                : `${category.color}22`,
-              color: isActive ? '#fb7185' : category.color,
-            }}
-          >
-            {isActive ? (
-              <LuSquare className="h-3.5 w-3.5 fill-current" />
-            ) : (
-              <LuPlay className="h-3.5 w-3.5 translate-x-[0.5px] fill-current" />
-            )}
-          </button>
+          {isActive && (
+            <span
+              className="inline-flex items-center gap-1.5 text-xs font-medium"
+              style={{ color: category.color }}
+            >
+              <LuTimer className="h-3 w-3" />
+              {formatStopwatch(activeElapsedSeconds, false)}
+            </span>
+          )}
         </div>
       </div>
 
