@@ -219,29 +219,38 @@ export function formatDayGroupHeader(
     parseInt(dStr, 10),
   );
 
+  const isCurrentYear = date.getFullYear() === now.getFullYear();
+
   const weekdayShort = date.toLocaleDateString([], {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
+  });
+
+  const monthDay = date.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
   });
 
   if (dayKey === todayKey) {
     return {
       primary: 'Today',
-      secondary: `${weekdayShort} · ${dayKey}`,
+      secondary: monthDay,
       isToday: true,
     };
   }
   if (dayKey === yesterdayKey) {
     return {
       primary: 'Yesterday',
-      secondary: `${weekdayShort} · ${dayKey}`,
+      secondary: monthDay,
       isToday: false,
     };
   }
   return {
     primary: weekdayShort,
-    secondary: dayKey,
+    secondary: '',
     isToday: false,
   };
 }

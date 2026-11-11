@@ -1,4 +1,4 @@
-import { LuCheck, LuFlame, LuPlus } from 'react-icons/lu';
+import { LuCheck, LuCookie, LuFlame, LuPlus } from 'react-icons/lu';
 import type { GlobalProgress } from '../types';
 import { formatDurationHuman } from '../utils/time';
 
@@ -6,6 +6,8 @@ interface HeaderProgressProps {
   globalProgress: GlobalProgress;
   onNewCategory: () => void;
   onOpenShutdown: () => void;
+  onOpenCookieJar: () => void;
+  cookieJarCount?: number;
   hasShutdownToday?: boolean;
 }
 
@@ -13,6 +15,8 @@ export function HeaderProgress({
   globalProgress,
   onNewCategory,
   onOpenShutdown,
+  onOpenCookieJar,
+  cookieJarCount = 0,
   hasShutdownToday = false,
 }: HeaderProgressProps) {
   const todayLabel = new Date().toLocaleDateString([], {
@@ -46,7 +50,21 @@ export function HeaderProgress({
           <p className="text-xs text-zinc-500">{todayLabel}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenCookieJar}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-200 transition hover:bg-amber-500/20 active:scale-[0.98]"
+          >
+            <LuCookie className="h-3.5 w-3.5 text-amber-400" />
+            <span>Cookie Jar</span>
+            {cookieJarCount > 0 && (
+              <span className="rounded-full bg-amber-500/25 px-1.5 py-0.2 text-[10px] font-semibold text-amber-200">
+                {cookieJarCount}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={onOpenShutdown}

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown, LuFlame } from 'react-icons/lu';
 import type { Category, SessionUpdate, TimeSession } from '../../types';
 import { formatDayGroupHeader, formatDurationHuman } from '../../utils/time';
 import { CategoryIcon } from '../CategoryIcon';
 import { SessionRow } from '../SessionRow';
+import { DailyMirrorSummary } from './DailyMirrorSummary';
 import type { DailyGroup } from './types';
 
 interface DailySessionGroupProps {
@@ -11,6 +12,7 @@ interface DailySessionGroupProps {
   categoryMap: Map<number, Category>;
   onUpdateSession: (id: number, data: SessionUpdate) => Promise<TimeSession>;
   onDeleteSession: (id: number) => Promise<void>;
+  onOpenShutdown: (dayKey: string) => void;
 }
 
 const MAX_INLINE_CATEGORIES = 3;
@@ -20,9 +22,11 @@ export function DailySessionGroup({
   categoryMap,
   onUpdateSession,
   onDeleteSession,
+  onOpenShutdown,
 }: DailySessionGroupProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const header = formatDayGroupHeader(group.dayKey);
+  const { dailyLog } = group;
 
   const visibleCategories = group.perCategoryTotals.slice(
     0,
@@ -38,23 +42,39 @@ export function DailySessionGroup({
       {/* Day Header */}
       <div className="border-b border-white/[0.05] bg-white/[0.02]">
         <div className="flex flex-col justify-between gap-2.5 px-4 py-2.5 sm:flex-row sm:items-center">
-          {/* Left: Day Title & Date */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-zinc-200">
+          {/* Left: Day Title, Date & Subtle Mirror Trigger (when unlogged) */}
+          <div
+            className="flex min-w-0 items-center gap-2"
+            title={`${header.primary}${header.secondary ? ` · ${header.secondary}` : ''} (${group.dayKey})`}
+          >
+            <span className="truncate text-xs font-semibold text-zinc-200">
               {header.primary}
             </span>
-            <span className="text-[11px] font-normal text-zinc-500">
-              {header.secondary}
-            </span>
-            <span className="text-[11px] text-zinc-600">·</span>
-            <span className="text-[11px] font-normal text-zinc-500">
+            {header.secondary && (
+              <span className="truncate text-[11px] font-normal text-zinc-500">
+                {header.secondary}
+              </span>
+            )}
+            <span className="shrink-0 text-[11px] text-zinc-600">·</span>
+            <span className="shrink-0 text-[11px] font-normal text-zinc-500">
               {group.sessions.length}{' '}
               {group.sessions.length === 1 ? 'session' : 'sessions'}
             </span>
+
+            {!dailyLog && (
+              <button
+                type="button"
+                onClick={() => onOpenShutdown(group.dayKey)}
+                title="Log Accountability Mirror for this day"
+                className="ml-0.5 inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md text-zinc-500 transition hover:bg-indigo-500/15 hover:text-indigo-300"
+              >
+                <LuFlame className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Right: Top 2-3 Category Icon Chips + "+N more" Toggle + Day Total */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
             <div className="flex flex-wrap items-center gap-1.5">
               {visibleCategories.map((catTot) => (
                 <div
@@ -138,6 +158,14 @@ export function DailySessionGroup({
         )}
       </div>
 
+      {/* Daily Accountability Mirror Summary */}
+      {dailyLog && (
+        <DailyMirrorSummary
+          dailyLog={dailyLog}
+          onEdit={() => onOpenShutdown(group.dayKey)}
+        />
+      )}
+
       {/* Expandable Full Daily Category Breakdown (when +N more is toggled) */}
       {isExpanded && (
         <div className="border-b border-white/[0.05] bg-white/[0.015] px-4 py-3">
@@ -210,18 +238,20 @@ export function DailySessionGroup({
       )}
 
       {/* Day's Chronological Sessions */}
-      <div className="divide-y divide-white/[0.04] p-2">
-        {group.sessions.map((session) => (
-          <SessionRow
-            key={session.id}
-            session={session}
-            category={categoryMap.get(session.category_id)}
-            compactDate={true}
-            onUpdate={onUpdateSession}
-            onDelete={onDeleteSession}
-          />
-        ))}
-      </div>
+      {group.sessions.length > 0 && (
+        <div className="divide-y divide-white/[0.04] p-2">
+          {group.sessions.map((session) => (
+            <SessionRow
+              key={session.id}
+              session={session}
+              category={categoryMap.get(session.category_id)}
+              compactDate={true}
+              onUpdate={onUpdateSession}
+              onDelete={onDeleteSession}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

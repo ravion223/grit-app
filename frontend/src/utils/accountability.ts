@@ -1,9 +1,24 @@
+import type { IconType } from 'react-icons';
+import {
+  LuCrosshair,
+  LuFlame,
+  LuFrown,
+  LuGauge,
+  LuLaugh,
+  LuMeh,
+  LuShieldOff,
+  LuSkull,
+  LuSmile,
+  LuTarget,
+} from 'react-icons/lu';
+
 export interface RatingDescriptor {
   value: number;
   label: string;
   subtitle: string;
   color: string;
   bgColor: string;
+  Icon: IconType;
 }
 
 export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
@@ -13,6 +28,7 @@ export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Zero motivation, heavy mental or physical fatigue',
     color: '#f43f5e',
     bgColor: 'rgba(244, 63, 94, 0.15)',
+    Icon: LuSkull,
   },
   2: {
     value: 2,
@@ -20,6 +36,7 @@ export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Urge to procrastinate or cut corners',
     color: '#fb923c',
     bgColor: 'rgba(251, 146, 60, 0.15)',
+    Icon: LuFrown,
   },
   3: {
     value: 3,
@@ -27,6 +44,7 @@ export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Normal energy, showed up without drama',
     color: '#38bdf8',
     bgColor: 'rgba(56, 189, 248, 0.15)',
+    Icon: LuMeh,
   },
   4: {
     value: 4,
@@ -34,6 +52,7 @@ export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'High energy, ready to attack the day',
     color: '#818cf8',
     bgColor: 'rgba(129, 140, 248, 0.15)',
+    Icon: LuSmile,
   },
   5: {
     value: 5,
@@ -41,6 +60,7 @@ export const MOOD_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Peak drive, unbreakable momentum',
     color: '#34d399',
     bgColor: 'rgba(52, 211, 153, 0.15)',
+    Icon: LuLaugh,
   },
 };
 
@@ -51,6 +71,7 @@ export const FOCUS_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Gave in to distractions, excuses won',
     color: '#f43f5e',
     bgColor: 'rgba(244, 63, 94, 0.15)',
+    Icon: LuShieldOff,
   },
   2: {
     value: 2,
@@ -58,6 +79,7 @@ export const FOCUS_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Stopped when discomfort or boredom hit',
     color: '#fb923c',
     bgColor: 'rgba(251, 146, 60, 0.15)',
+    Icon: LuGauge,
   },
   3: {
     value: 3,
@@ -65,6 +87,7 @@ export const FOCUS_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Put in honest, solid execution',
     color: '#38bdf8',
     bgColor: 'rgba(56, 189, 248, 0.15)',
+    Icon: LuTarget,
   },
   4: {
     value: 4,
@@ -72,6 +95,7 @@ export const FOCUS_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Overcame friction and locked in anyway',
     color: '#818cf8',
     bgColor: 'rgba(129, 140, 248, 0.15)',
+    Icon: LuCrosshair,
   },
   5: {
     value: 5,
@@ -79,6 +103,7 @@ export const FOCUS_LEVELS: Record<number, RatingDescriptor> = {
     subtitle: 'Total immersion, maximum discipline',
     color: '#34d399',
     bgColor: 'rgba(52, 211, 153, 0.15)',
+    Icon: LuFlame,
   },
 };
 

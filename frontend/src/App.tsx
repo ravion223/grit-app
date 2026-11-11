@@ -6,6 +6,7 @@ import { ArchiveCategoryModal } from './components/ArchiveCategoryModal';
 import { BackgroundGrit } from './components/BackgroundGrit';
 import { CategoryGrid } from './components/CategoryGrid';
 import { CategoryModal } from './components/CategoryModal';
+import { CookieJarModal } from './components/CookieJarModal';
 import { HeaderProgress } from './components/HeaderProgress';
 import { SessionHistory } from './components/SessionHistory';
 import { useGritData } from './hooks/useGritData';
@@ -23,6 +24,7 @@ export function App() {
   const {
     categories,
     sessions,
+    dailyLogs,
     dailyLogsMap,
     activeSession,
     loading,
@@ -49,11 +51,16 @@ export function App() {
   const [shutdownDate, setShutdownDate] = useState<string | undefined>(
     undefined,
   );
+  const [isCookieJarOpen, setIsCookieJarOpen] = useState(false);
 
   const todayKey = useMemo(() => getDayKey(), []);
   const hasShutdownToday = useMemo(
     () => dailyLogsMap.has(todayKey),
     [dailyLogsMap, todayKey],
+  );
+  const cookieJarCount = useMemo(
+    () => dailyLogs.filter((l) => l.is_cookie_jar).length,
+    [dailyLogs],
   );
 
   const activeCategory = useMemo(
@@ -148,6 +155,8 @@ export function App() {
           globalProgress={globalProgress}
           onNewCategory={handleOpenNewCategory}
           onOpenShutdown={() => handleOpenShutdown(todayKey)}
+          onOpenCookieJar={() => setIsCookieJarOpen(true)}
+          cookieJarCount={cookieJarCount}
           hasShutdownToday={hasShutdownToday}
         />
 
@@ -197,8 +206,10 @@ export function App() {
             <SessionHistory
               sessions={sessions}
               categories={categories}
+              dailyLogsMap={dailyLogsMap}
               onUpdateSession={updateSession}
               onDeleteSession={deleteSession}
+              onOpenShutdown={handleOpenShutdown}
             />
           </>
         )}
@@ -231,6 +242,15 @@ export function App() {
         onSaveDailyLog={handleSaveDailyLog}
         onDeleteDailyLog={deleteDailyLog}
         existingLogs={dailyLogsMap}
+      />
+
+      {/* Cookie Jar Modal */}
+      <CookieJarModal
+        isOpen={isCookieJarOpen}
+        onClose={() => setIsCookieJarOpen(false)}
+        dailyLogs={dailyLogs}
+        sessions={sessions}
+        onOpenMirrorForDate={(logDate) => handleOpenShutdown(logDate)}
       />
     </div>
   );
