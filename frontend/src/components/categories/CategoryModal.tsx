@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { LuCheck, LuX } from 'react-icons/lu';
-import type { Category, CategoryCreate, CategoryUpdate } from '../types';
-import { CATEGORY_COLORS, CATEGORY_ICONS } from '../utils/icons';
-import { formatMinutesTarget } from '../utils/time';
+import type { Category, CategoryCreate, CategoryUpdate } from '../../types';
+import { CATEGORY_COLORS, CATEGORY_ICONS } from '../../utils/icons';
+import { formatMinutesTarget } from '../../utils/time';
 
 interface CategoryModalProps {
   isOpen: boolean;

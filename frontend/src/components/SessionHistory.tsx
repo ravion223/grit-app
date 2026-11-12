@@ -9,9 +9,9 @@ import { ExportMenu } from './history/ExportMenu';
 import { MonthSelector } from './history/MonthSelector';
 import { MonthlyAggregates } from './history/MonthlyAggregates';
 import { SessionListToolbar } from './history/SessionListToolbar';
+import { SessionRow } from './history/SessionRow';
 import type { CategoryFilterValue } from './history/types';
 import { useHistoryData } from './history/useHistoryData';
-import { SessionRow } from './SessionRow';
 
 interface SessionHistoryProps {
   sessions: TimeSession[];

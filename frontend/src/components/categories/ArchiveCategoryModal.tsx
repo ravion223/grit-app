@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Category } from '../types';
+import type { Category } from '../../types';
 
 interface ArchiveCategoryModalProps {
   category: Category | null;

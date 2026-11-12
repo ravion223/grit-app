@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { LuCheck, LuPencil, LuTrash2, LuX } from 'react-icons/lu';
-import type { Category, SessionUpdate, TimeSession } from '../types';
+import type { Category, SessionUpdate, TimeSession } from '../../types';
 import {
   formatDurationHuman,
   formatSessionTimeRange,
   formatSessionTimestamp,
-} from '../utils/time';
-import { CategoryIcon } from './CategoryIcon';
+} from '../../utils/time';
+import { CategoryIcon } from '../CategoryIcon';
 
 interface SessionRowProps {
   session: TimeSession;

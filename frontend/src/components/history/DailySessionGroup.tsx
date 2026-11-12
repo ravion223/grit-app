@@ -3,8 +3,8 @@ import { LuChevronDown, LuFlame } from 'react-icons/lu';
 import type { Category, SessionUpdate, TimeSession } from '../../types';
 import { formatDayGroupHeader, formatDurationHuman } from '../../utils/time';
 import { CategoryIcon } from '../CategoryIcon';
-import { SessionRow } from '../SessionRow';
 import { DailyMirrorSummary } from './DailyMirrorSummary';
+import { SessionRow } from './SessionRow';
 import type { DailyGroup } from './types';
 
 interface DailySessionGroupProps {

@@ -1,6 +1,6 @@
 import { LuPlus } from 'react-icons/lu';
 import type { Category, CategoryProgress, TimeSession } from '../types';
-import { CategoryCard } from './CategoryCard';
+import { CategoryCard } from './categories/CategoryCard';
 
 interface CategoryGridProps {
   categories: Category[];

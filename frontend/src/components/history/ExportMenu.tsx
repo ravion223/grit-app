@@ -86,7 +86,7 @@ export function ExportMenu({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.07] bg-[#151821] px-3.5 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-white/[0.14] hover:bg-[#191d28]"
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.07] bg-[#151821] px-3.5 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/[0.14] hover:bg-[#191d28]"
       >
         {successLabel ? (
           <>

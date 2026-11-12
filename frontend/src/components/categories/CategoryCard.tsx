@@ -7,9 +7,9 @@ import {
   LuSquare,
   LuTimer,
 } from 'react-icons/lu';
-import type { Category, CategoryProgress } from '../types';
-import { formatDurationHuman, formatStopwatch } from '../utils/time';
-import { CategoryIcon } from './CategoryIcon';
+import type { Category, CategoryProgress } from '../../types';
+import { formatDurationHuman, formatStopwatch } from '../../utils/time';
+import { CategoryIcon } from '../CategoryIcon';
 
 interface CategoryCardProps {
   category: Category;
