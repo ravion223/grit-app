@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { LuCircleAlert, LuRefreshCw, LuX } from 'react-icons/lu';
+import { LuCircleAlert, LuCommand, LuRefreshCw, LuX } from 'react-icons/lu';
 import { AccountabilityModal } from './components/AccountabilityModal';
 import { ActiveTimerHero } from './components/ActiveTimerHero';
 import { ArchiveCategoryModal } from './components/ArchiveCategoryModal';
 import { BackgroundGrit } from './components/BackgroundGrit';
 import { CategoryGrid } from './components/CategoryGrid';
 import { CategoryModal } from './components/CategoryModal';
+import { CommandPalette } from './components/CommandPalette';
 import { CookieJarModal } from './components/CookieJarModal';
 import { HeaderProgress } from './components/HeaderProgress';
 import { SessionHistory } from './components/SessionHistory';
@@ -52,6 +53,15 @@ export function App() {
     undefined,
   );
   const [isCookieJarOpen, setIsCookieJarOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  const handleOpenCommandPalette = () => {
+    setIsCategoryModalOpen(false);
+    setArchivingCategory(null);
+    setIsShutdownModalOpen(false);
+    setIsCookieJarOpen(false);
+    setIsCommandPaletteOpen(true);
+  };
 
   const todayKey = useMemo(() => getDayKey(), []);
   const hasShutdownToday = useMemo(
@@ -122,6 +132,19 @@ export function App() {
         isActive={activeSession !== null}
         accentColor={activeCategory?.color || '#10B981'}
       />
+      <button
+        type="button"
+        onClick={handleOpenCommandPalette}
+        aria-label="Open command palette"
+        title="Command Palette (Ctrl / Cmd + K)"
+        className="fixed top-4 right-4 z-30 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-[#151821]/85 px-2.5 py-1.5 text-xs font-medium text-zinc-400 backdrop-blur-md transition-colors hover:border-white/[0.16] hover:bg-[#1a1e29] hover:text-zinc-200"
+      >
+        <LuCommand className="h-3.5 w-3.5 text-zinc-400" />
+        <span className="hidden sm:inline">Commands</span>
+        <kbd className="rounded border border-white/[0.1] bg-white/[0.04] px-1 py-0.5 font-mono text-[10px] text-zinc-500">
+          K
+        </kbd>
+      </button>
       <main className="relative z-10 mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6">
         {/* Error Banner */}
         {error && (
@@ -211,9 +234,40 @@ export function App() {
               onDeleteSession={deleteSession}
               onOpenShutdown={handleOpenShutdown}
             />
+
+            {/* Subtle Keyboard Shortcut Footer Hint */}
+            <footer className="pt-2 pb-4 text-center text-[11px] text-zinc-600">
+              Press{' '}
+              <kbd className="rounded border border-white/[0.07] bg-white/[0.02] px-1.5 py-0.5 font-mono text-[10px] text-zinc-500">
+                Ctrl / ⌘ + K
+              </kbd>{' '}
+              for command palette
+            </footer>
           </>
         )}
       </main>
+
+      {/* Keyboard Command Palette (Cmd/Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onOpen={handleOpenCommandPalette}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        categories={categories}
+        sessions={sessions}
+        activeSession={activeSession}
+        activeCategory={activeCategory}
+        onStartOrSwitch={async (catId) => {
+          await startOrSwitchSession(catId);
+        }}
+        onStop={async () => {
+          await stopActiveSession();
+        }}
+        onOpenShutdown={() => handleOpenShutdown(todayKey)}
+        onOpenCookieJar={() => setIsCookieJarOpen(true)}
+        onNewCategory={handleOpenNewCategory}
+        onEditCategory={handleOpenEditCategory}
+        onArchiveCategory={(cat) => setArchivingCategory(cat)}
+      />
 
       {/* Create / Edit Category Modal */}
       <CategoryModal
