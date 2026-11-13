@@ -50,6 +50,7 @@ export function SessionHistory({
     filteredStats,
     dailyGroups,
     latestActiveMonth,
+    mirrorStats,
   } = useHistoryData({
     sessions,
     categories,
@@ -126,6 +127,7 @@ export function SessionHistory({
         monthTotalSeconds={monthTotalSeconds}
         elapsedDaysInMonth={elapsedDaysInMonth}
         categorySummaries={categorySummaries}
+        mirrorStats={mirrorStats}
         onSelectCategory={(val) => setSelectedCategory(val)}
       />
 

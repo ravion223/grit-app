@@ -45,3 +45,10 @@ export interface FilteredHistoryStats {
   avgPerActiveDay: number;
   avgPerCalendarDay: number;
 }
+
+export interface MonthlyMirrorStats {
+  loggedDaysCount: number;
+  avgMood: number | null;
+  avgFocus: number | null;
+  callousedDaysCount: number;
+}

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Category, DailyLog, TimeSession } from '../../types';
+import { isCallousedMind } from '../../utils/accountability';
 import {
   getDayKey,
   getMonthDayCounts,
@@ -12,6 +13,7 @@ import type {
   DailyCategoryTotal,
   DailyGroup,
   FilteredHistoryStats,
+  MonthlyMirrorStats,
   MonthStat,
 } from './types';
 
@@ -374,6 +376,41 @@ export function useHistoryData({
     return withSessions?.monthKey ?? null;
   }, [availableMonths]);
 
+  const mirrorStats: MonthlyMirrorStats = useMemo(() => {
+    let loggedDaysCount = 0;
+    let moodSum = 0;
+    let moodCount = 0;
+    let focusSum = 0;
+    let focusCount = 0;
+    let callousedDaysCount = 0;
+
+    for (const log of dailyLogsMap.values()) {
+      if (!log.log_date.startsWith(selectedMonth)) continue;
+      loggedDaysCount += 1;
+
+      if (log.mood_score !== null) {
+        moodSum += log.mood_score;
+        moodCount += 1;
+      }
+      if (log.focus_level !== null) {
+        focusSum += log.focus_level;
+        focusCount += 1;
+      }
+      if (isCallousedMind(log.mood_score, log.focus_level)) {
+        callousedDaysCount += 1;
+      }
+    }
+
+    return {
+      loggedDaysCount,
+      avgMood:
+        moodCount > 0 ? Math.round((moodSum / moodCount) * 10) / 10 : null,
+      avgFocus:
+        focusCount > 0 ? Math.round((focusSum / focusCount) * 10) / 10 : null,
+      callousedDaysCount,
+    };
+  }, [dailyLogsMap, selectedMonth]);
+
   return {
     categoryMap,
     allCompletedSessions,
@@ -390,5 +427,6 @@ export function useHistoryData({
     filteredStats,
     dailyGroups,
     latestActiveMonth,
+    mirrorStats,
   };
 }

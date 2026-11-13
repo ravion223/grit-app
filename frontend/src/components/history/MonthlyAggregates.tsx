@@ -1,9 +1,12 @@
+import { LuFlame } from 'react-icons/lu';
+import { FOCUS_LEVELS, MOOD_LEVELS } from '../../utils/accountability';
 import { formatDurationHuman, formatMonthShort } from '../../utils/time';
 import { CategoryIcon } from '../CategoryIcon';
 import type {
   CategoryFilterValue,
   CategoryMonthlySummary,
   FilteredHistoryStats,
+  MonthlyMirrorStats,
 } from './types';
 
 interface MonthlyAggregatesProps {
@@ -14,6 +17,7 @@ interface MonthlyAggregatesProps {
   monthTotalSeconds: number;
   elapsedDaysInMonth: number;
   categorySummaries: CategoryMonthlySummary[];
+  mirrorStats: MonthlyMirrorStats;
   onSelectCategory: (value: CategoryFilterValue) => void;
 }
 
@@ -25,8 +29,36 @@ export function MonthlyAggregates({
   monthTotalSeconds,
   elapsedDaysInMonth,
   categorySummaries,
+  mirrorStats,
   onSelectCategory,
 }: MonthlyAggregatesProps) {
+  const moodDesc =
+    mirrorStats.avgMood !== null
+      ? MOOD_LEVELS[Math.min(5, Math.max(1, Math.round(mirrorStats.avgMood)))]
+      : null;
+  const focusDesc =
+    mirrorStats.avgFocus !== null
+      ? FOCUS_LEVELS[Math.min(5, Math.max(1, Math.round(mirrorStats.avgFocus)))]
+      : null;
+
+  const ratingBadges = [
+    moodDesc && mirrorStats.avgMood !== null
+      ? {
+          key: 'mood',
+          prefix: 'Mood',
+          avg: mirrorStats.avgMood,
+          desc: moodDesc,
+        }
+      : null,
+    focusDesc && mirrorStats.avgFocus !== null
+      ? {
+          key: 'focus',
+          prefix: 'Focus',
+          avg: mirrorStats.avgFocus,
+          desc: focusDesc,
+        }
+      : null,
+  ].filter((item) => item !== null);
   return (
     <div className="rounded-2xl border border-white/[0.05] bg-[#151821] p-4 sm:p-5">
       {/* Top Metrics Strip */}
@@ -96,6 +128,52 @@ export function MonthlyAggregates({
           </div>
         </div>
       </div>
+
+      {/* Compact Accountability Mirror Summary Strip */}
+      {mirrorStats.loggedDaysCount > 0 && (
+        <div className="mt-3 flex flex-col justify-between gap-2.5 rounded-xl border border-white/[0.04] bg-white/[0.015] px-3.5 py-2.5 sm:flex-row sm:items-center">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xs font-medium text-zinc-400">
+              Accountability Mirror
+            </span>
+            <span className="text-[11px] text-zinc-500">
+              {mirrorStats.loggedDaysCount} / {elapsedDaysInMonth} days logged
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {ratingBadges.map(({ key, prefix, avg, desc }) => {
+              const Icon = desc.Icon;
+              return (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[11px] font-medium"
+                  style={{
+                    backgroundColor: desc.bgColor,
+                    color: desc.color,
+                  }}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    {prefix} {avg.toFixed(1)}/5
+                  </span>
+                  <span className="opacity-75">({desc.label})</span>
+                </span>
+              );
+            })}
+
+            {mirrorStats.callousedDaysCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+                <LuFlame className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <span>
+                  {mirrorStats.callousedDaysCount} Calloused{' '}
+                  {mirrorStats.callousedDaysCount === 1 ? 'day' : 'days'}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Multi-Category Stacked Distribution Bar & Per-Category Breakdown */}
       {categorySummaries.length > 0 && (
