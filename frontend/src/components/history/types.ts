@@ -14,6 +14,7 @@ export interface CategoryMonthlySummary {
   avgPerCalendarDaySeconds: number;
   dailyTargetSeconds: number | null;
   percentageOfMonth: number;
+  isArchived?: boolean;
 }
 
 export interface DailyCategoryTotal {

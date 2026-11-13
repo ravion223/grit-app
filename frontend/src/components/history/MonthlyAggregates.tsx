@@ -252,6 +252,11 @@ export function MonthlyAggregates({
                         <span className="truncate text-xs font-medium text-zinc-200">
                           {cat.name}
                         </span>
+                        {cat.isArchived && (
+                          <span className="shrink-0 rounded bg-white/[0.06] px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-zinc-500 uppercase">
+                            Archived
+                          </span>
+                        )}
                         {monthTotalSeconds > 0 && cat.totalSeconds > 0 && (
                           <span className="text-[10px] text-zinc-500 font-normal">
                             {pct}%

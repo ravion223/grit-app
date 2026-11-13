@@ -24,6 +24,7 @@ import { getDayKey } from './utils/time';
 export function App() {
   const {
     categories,
+    activeCategories,
     sessions,
     dailyLogs,
     dailyLogsMap,
@@ -201,7 +202,7 @@ export function App() {
             <ActiveTimerHero
               activeSession={activeSession}
               activeCategory={activeCategory}
-              categories={categories}
+              categories={activeCategories}
               elapsedSeconds={elapsedSeconds}
               activeCategoryProgress={
                 activeCategory
@@ -214,7 +215,7 @@ export function App() {
 
             {/* 3. Category Cards */}
             <CategoryGrid
-              categories={categories}
+              categories={activeCategories}
               progressByCategory={progressByCategory}
               activeSession={activeSession}
               activeElapsedSeconds={elapsedSeconds}
@@ -252,7 +253,7 @@ export function App() {
         isOpen={isCommandPaletteOpen}
         onOpen={handleOpenCommandPalette}
         onClose={() => setIsCommandPaletteOpen(false)}
-        categories={categories}
+        categories={activeCategories}
         sessions={sessions}
         activeSession={activeSession}
         activeCategory={activeCategory}

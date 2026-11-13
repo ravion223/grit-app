@@ -79,6 +79,11 @@ export function useGritData() {
     };
   }, []);
 
+  const activeCategories = useMemo(
+    () => categories.filter((cat) => !cat.is_archived),
+    [categories],
+  );
+
   const dailyLogsMap = useMemo(
     () => new Map(dailyLogs.map((log) => [log.log_date, log])),
     [dailyLogs],
@@ -133,7 +138,11 @@ export function useGritData() {
 
   const createCategory = useCallback(async (data: CategoryCreate) => {
     const created = await categoriesApi.create(data);
-    setCategories((prev) => [...prev, created]);
+    setCategories((prev) =>
+      prev.some((cat) => cat.id === created.id)
+        ? prev.map((cat) => (cat.id === created.id ? created : cat))
+        : [...prev, created],
+    );
     return created;
   }, []);
 
@@ -150,8 +159,10 @@ export function useGritData() {
 
   const archiveCategory = useCallback(
     async (id: number) => {
-      await categoriesApi.archive(id);
-      setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      const archived = await categoriesApi.archive(id);
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === id ? archived : cat)),
+      );
       if (activeSession?.category_id === id) {
         setActiveSession(null);
       }
@@ -174,6 +185,7 @@ export function useGritData() {
 
   return {
     categories,
+    activeCategories,
     sessions,
     dailyLogs,
     dailyLogsMap,

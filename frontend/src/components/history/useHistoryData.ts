@@ -146,6 +146,7 @@ export function useHistoryData({
         count: 0,
         days: new Set<string>(),
       };
+      if (cat.is_archived && stats.seconds === 0) continue;
       const activeDays = stats.days.size;
       summaries.push({
         categoryId: cat.id,
@@ -166,6 +167,7 @@ export function useHistoryData({
             ? cat.daily_target_minutes * 60
             : null,
         percentageOfMonth: totalSec > 0 ? (stats.seconds / totalSec) * 100 : 0,
+        isArchived: cat.is_archived,
       });
     }
 
@@ -214,8 +216,10 @@ export function useHistoryData({
     if (selectedCategory === 'archived') {
       return hasArchivedSessionsInMonth ? 'archived' : 'all';
     }
-    return categoryMap.has(selectedCategory) ? selectedCategory : 'all';
-  }, [selectedCategory, hasArchivedSessionsInMonth, categoryMap]);
+    return categorySummaries.some((c) => c.categoryId === selectedCategory)
+      ? selectedCategory
+      : 'all';
+  }, [selectedCategory, hasArchivedSessionsInMonth, categorySummaries]);
 
   // Filtered sessions for the selected month + selected category tab
   const filteredSessions = useMemo(() => {

@@ -72,6 +72,18 @@ export function calculateProgress(
         ? cat.weekly_target_minutes * 60
         : null;
 
+    if (cat.is_archived) {
+      dailyLoggedSeconds += dSec;
+      weeklyLoggedSeconds += wSec;
+      if (dTargetSec !== null && dSec > 0) {
+        dailyTargetSeconds += dSec;
+      }
+      if (wTargetSec !== null && wSec > 0) {
+        weeklyTargetSeconds += wSec;
+      }
+      continue;
+    }
+
     const dPct = dTargetSec ? Math.min(100, (dSec / dTargetSec) * 100) : 0;
     const wPct = wTargetSec ? Math.min(100, (wSec / wTargetSec) * 100) : 0;
 

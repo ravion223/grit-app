@@ -14,13 +14,22 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 @router.post("/", response_model=models.Category, status_code=201)
 def create_category(category_in: CategoryCreate, db: Session = Depends(get_session)):
     """
-    Creates a new category for time tracking
+    Creates a new category for time tracking, or reactivates an archived one
+    with the same name.
     """
     statement = select(models.Category).where(models.Category.name == category_in.name)
     existing = db.exec(statement).first()
 
     if existing:
-        raise HTTPException(status_code=400, detail="This category already exists")
+        if not existing.is_archived:
+            raise HTTPException(status_code=400, detail="This category already exists")
+        existing.is_archived = False
+        for key, value in category_in.model_dump().items():
+            setattr(existing, key, value)
+        db.add(existing)
+        db.commit()
+        db.refresh(existing)
+        return existing
 
     new_category = models.Category(**category_in.model_dump())
 
@@ -94,13 +103,15 @@ def delete_category(category_id: int, db: Session = Depends(get_session)):
 
 
 @router.get("/", response_model=List[models.Category])
-def get_all_categories(db: Session = Depends(get_session)):
+def get_all_categories(
+    include_archived: bool = True, db: Session = Depends(get_session)
+):
     """
-    Returns all active (non-archived) categories.
+    Returns categories, optionally filtering out archived ones.
     """
-    statement = select(models.Category).where(
-        col(models.Category.is_archived).is_(False)
-    )
+    statement = select(models.Category)
+    if not include_archived:
+        statement = statement.where(col(models.Category.is_archived).is_(False))
     categories = db.exec(statement).all()
 
     return categories
