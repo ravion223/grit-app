@@ -12,7 +12,9 @@ load_dotenv()
 
 is_debug = os.getenv("DEBUG", "False").strip().lower() in ("true", "1", "yes")
 raw_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
-origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+origins = [
+    origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()
+]
 
 api_key_header = APIKeyHeader(name="X-Grit-Key", auto_error=False)
 
