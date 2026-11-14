@@ -10,6 +10,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { CookieJarModal } from './components/CookieJarModal';
 import { HeaderProgress } from './components/HeaderProgress';
 import { SessionHistory } from './components/SessionHistory';
+import { UnlockScreen } from './components/UnlockScreen';
 import { useGritData } from './hooks/useGritData';
 import { useTimer } from './hooks/useTimer';
 import type {
@@ -29,10 +30,12 @@ export function App() {
     dailyLogs,
     dailyLogsMap,
     activeSession,
+    isLocked,
     loading,
     error,
     setError,
     refresh,
+    unlock,
     startOrSwitchSession,
     stopActiveSession,
     createCategory,
@@ -126,6 +129,15 @@ export function App() {
   const handleSaveDailyLog = async (logDate: string, data: DailyLogUpsert) => {
     return await upsertDailyLog(logDate, data);
   };
+
+  if (isLocked) {
+    return (
+      <div className="relative min-h-screen bg-[#0e1015] text-zinc-100">
+        <BackgroundGrit isActive={false} accentColor="#10B981" />
+        <UnlockScreen onUnlock={unlock} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-[#0e1015] text-zinc-100">

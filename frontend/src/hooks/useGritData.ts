@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { categoriesApi } from '../api/categories';
+import {
+  clearStoredSecretKey,
+  getStoredSecretKey,
+  isUnauthorizedError,
+  setStoredSecretKey,
+  subscribeUnauthorized,
+} from '../api/client';
 import { dailyLogsApi } from '../api/dailyLogs';
 import { sessionsApi } from '../api/sessions';
 import type {
@@ -17,56 +24,100 @@ export function useGritData() {
   const [sessions, setSessions] = useState<TimeSession[]>([]);
   const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
   const [activeSession, setActiveSession] = useState<TimeSession | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLocked, setIsLocked] = useState<boolean>(
+    () => !getStoredSecretKey(),
+  );
+  const [loading, setLoading] = useState<boolean>(() =>
+    Boolean(getStoredSecretKey()),
+  );
   const [error, setError] = useState<string | null>(null);
+
+  const loadAllData = useCallback(async (sessionLimit = 2000) => {
+    const [catsData, sessionsData, activeData, logsData] = await Promise.all([
+      categoriesApi.getAll(),
+      sessionsApi.getAll({ limit: sessionLimit }),
+      sessionsApi.getActive(),
+      dailyLogsApi.getAll(),
+    ]);
+    setCategories(catsData);
+    setSessions(sessionsData);
+    setActiveSession(activeData);
+    setDailyLogs(logsData);
+  }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [catsData, sessionsData, activeData, logsData] = await Promise.all([
-        categoriesApi.getAll(),
-        sessionsApi.getAll({ limit: 2000 }),
-        sessionsApi.getActive(),
-        dailyLogsApi.getAll(),
-      ]);
-      setCategories(catsData);
-      setSessions(sessionsData);
-      setActiveSession(activeData);
-      setDailyLogs(logsData);
+      await loadAllData(2000);
+      setIsLocked(false);
     } catch (err) {
+      if (isUnauthorizedError(err)) {
+        setIsLocked(true);
+        return;
+      }
       const msg =
         err instanceof Error
           ? err.message
           : 'Unable to connect to the Grit API server.';
       setError(msg);
     }
-  }, []);
+  }, [loadAllData]);
+
+  const unlock = useCallback(
+    async (secretKey: string) => {
+      const trimmed = secretKey.trim();
+      if (!trimmed) {
+        throw new Error('Please enter your access key.');
+      }
+      setStoredSecretKey(trimmed);
+      setLoading(true);
+      try {
+        await loadAllData(2000);
+        setIsLocked(false);
+        setError(null);
+      } catch (err) {
+        if (isUnauthorizedError(err)) {
+          clearStoredSecretKey();
+          setIsLocked(true);
+          throw new Error('Invalid access key.', { cause: err });
+        }
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadAllData],
+  );
 
   useEffect(() => {
+    const unsubscribe = subscribeUnauthorized(() => {
+      setIsLocked(true);
+      setError(null);
+    });
+
+    if (!getStoredSecretKey()) {
+      return unsubscribe;
+    }
+
     let cancelled = false;
     (async () => {
       try {
-        const [catsData, sessionsData, activeData, logsData] =
-          await Promise.all([
-            categoriesApi.getAll(),
-            sessionsApi.getAll({ limit: 100 }),
-            sessionsApi.getActive(),
-            dailyLogsApi.getAll(),
-          ]);
+        await loadAllData(2000);
         if (!cancelled) {
-          setCategories(catsData);
-          setSessions(sessionsData);
-          setActiveSession(activeData);
-          setDailyLogs(logsData);
+          setIsLocked(false);
           setError(null);
         }
       } catch (err) {
         if (!cancelled) {
-          const msg =
-            err instanceof Error
-              ? err.message
-              : 'Unable to connect to the Grit API server.';
-          setError(msg);
+          if (isUnauthorizedError(err)) {
+            setIsLocked(true);
+          } else {
+            const msg =
+              err instanceof Error
+                ? err.message
+                : 'Unable to connect to the Grit API server.';
+            setError(msg);
+          }
         }
       } finally {
         if (!cancelled) {
@@ -74,10 +125,12 @@ export function useGritData() {
         }
       }
     })();
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
-  }, []);
+  }, [loadAllData]);
 
   const activeCategories = useMemo(
     () => categories.filter((cat) => !cat.is_archived),
@@ -190,10 +243,12 @@ export function useGritData() {
     dailyLogs,
     dailyLogsMap,
     activeSession,
+    isLocked,
     loading,
     error,
     setError,
     refresh,
+    unlock,
     startOrSwitchSession,
     stopActiveSession,
     createCategory,
