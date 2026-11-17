@@ -4,7 +4,75 @@ import type {
   GlobalProgress,
   TimeSession,
 } from '../types';
-import { getStartOfToday, getStartOfWeek, parseBackendDate } from './time';
+import {
+  getDayKey,
+  getStartOfToday,
+  getStartOfWeek,
+  parseBackendDate,
+} from './time';
+
+function getEffectiveTargetSeconds(
+  targetMinutes: number | null,
+  loggedSeconds: number,
+  isArchived: boolean,
+): number {
+  if (!targetMinutes || targetMinutes <= 0) return 0;
+  return isArchived ? loggedSeconds : targetMinutes * 60;
+}
+
+export interface DayExecutionStats {
+  sessionCount: number;
+  totalSeconds: number;
+  targetSeconds: number;
+  percentage: number;
+  isGoalMet: boolean;
+}
+
+/**
+ * Computes completed-session execution stats and effective daily target for a given day (YYYY-MM-DD).
+ */
+export function calculateDayStats(
+  categories: Category[],
+  sessions: TimeSession[],
+  dayKey: string,
+): DayExecutionStats {
+  const loggedByCat: Record<number, number> = {};
+  let sessionCount = 0;
+  let totalSeconds = 0;
+
+  for (const session of sessions) {
+    if (session.end_time === null) continue;
+    if (getDayKey(parseBackendDate(session.start_time)) !== dayKey) continue;
+
+    sessionCount += 1;
+    const duration = Math.max(0, session.duration_seconds ?? 0);
+    totalSeconds += duration;
+    loggedByCat[session.category_id] =
+      (loggedByCat[session.category_id] ?? 0) + duration;
+  }
+
+  let targetSeconds = 0;
+  for (const cat of categories) {
+    targetSeconds += getEffectiveTargetSeconds(
+      cat.daily_target_minutes,
+      loggedByCat[cat.id] ?? 0,
+      cat.is_archived,
+    );
+  }
+
+  const percentage =
+    targetSeconds > 0
+      ? Math.min(100, Math.round((totalSeconds / targetSeconds) * 100))
+      : 100;
+
+  return {
+    sessionCount,
+    totalSeconds,
+    targetSeconds,
+    percentage,
+    isGoalMet: targetSeconds > 0 && totalSeconds >= targetSeconds,
+  };
+}
 
 export function calculateProgress(
   categories: Category[],
@@ -72,15 +140,20 @@ export function calculateProgress(
         ? cat.weekly_target_minutes * 60
         : null;
 
+    dailyLoggedSeconds += dSec;
+    weeklyLoggedSeconds += wSec;
+    dailyTargetSeconds += getEffectiveTargetSeconds(
+      cat.daily_target_minutes,
+      dSec,
+      cat.is_archived,
+    );
+    weeklyTargetSeconds += getEffectiveTargetSeconds(
+      cat.weekly_target_minutes,
+      wSec,
+      cat.is_archived,
+    );
+
     if (cat.is_archived) {
-      dailyLoggedSeconds += dSec;
-      weeklyLoggedSeconds += wSec;
-      if (dTargetSec !== null && dSec > 0) {
-        dailyTargetSeconds += dSec;
-      }
-      if (wTargetSec !== null && wSec > 0) {
-        weeklyTargetSeconds += wSec;
-      }
       continue;
     }
 
@@ -92,18 +165,10 @@ export function calculateProgress(
 
     if (dTargetSec !== null) {
       totalCategoriesWithDailyGoal += 1;
-      dailyTargetSeconds += dTargetSec;
       if (isDailyComplete) {
         completedDailyCategories += 1;
       }
     }
-
-    if (wTargetSec !== null) {
-      weeklyTargetSeconds += wTargetSec;
-    }
-
-    dailyLoggedSeconds += dSec;
-    weeklyLoggedSeconds += wSec;
 
     byCategory[cat.id] = {
       categoryId: cat.id,

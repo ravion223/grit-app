@@ -7,7 +7,8 @@ import {
   JOURNAL_PLACEHOLDERS,
   MOOD_LEVELS,
 } from '../utils/accountability';
-import { getDayKey, parseBackendDate } from '../utils/time';
+import { calculateDayStats } from '../utils/progress';
+import { getDayKey } from '../utils/time';
 import { AccountabilityStatsSummary } from './accountability/AccountabilityStatsSummary';
 import { ActiveSessionNotice } from './accountability/ActiveSessionNotice';
 import { CallousedMindBanner } from './accountability/CallousedMindBanner';
@@ -130,36 +131,10 @@ function AccountabilityModalForm({
   }, [onClose]);
 
   // Aggregate sessions for the selected day
-  const dayStats = useMemo(() => {
-    const matchingSessions = sessions.filter((s) => {
-      const sDay = getDayKey(parseBackendDate(s.start_time));
-      return sDay === selectedDate && s.end_time !== null;
-    });
-
-    const totalSeconds = matchingSessions.reduce(
-      (sum, s) => sum + Math.max(0, s.duration_seconds ?? 0),
-      0,
-    );
-
-    const totalTargetMinutes = categories.reduce(
-      (sum, c) => sum + (c.daily_target_minutes ?? 0),
-      0,
-    );
-    const targetSeconds = totalTargetMinutes * 60;
-
-    const percentage =
-      targetSeconds > 0
-        ? Math.min(100, Math.round((totalSeconds / targetSeconds) * 100))
-        : 100;
-
-    return {
-      sessionCount: matchingSessions.length,
-      totalSeconds,
-      targetSeconds,
-      percentage,
-      isGoalMet: targetSeconds > 0 && totalSeconds >= targetSeconds,
-    };
-  }, [sessions, categories, selectedDate]);
+  const dayStats = useMemo(
+    () => calculateDayStats(categories, sessions, selectedDate),
+    [categories, sessions, selectedDate],
+  );
 
   const activeCategory = useMemo(
     () => categories.find((c) => c.id === activeSession?.category_id),
