@@ -145,4 +145,3 @@ npm run dev
 ```
 
 Open `http://localhost:5173` and enter the `GRIT_SECRET_KEY` you configured in `backend/.env` on the unlock screen.
-<img width="800" height="450" alt="ezgif-81c21369ebb50b81" src="https://github.com/user-attachments/assets/e2fe8e77-f3bd-47e8-b4d0-a8d110212266" />
