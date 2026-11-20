@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { categoriesApi } from '../api/categories';
 import {
   clearStoredSecretKey,
@@ -18,6 +18,35 @@ import type {
   SessionUpdate,
   TimeSession,
 } from '../types';
+import { parseBackendDate } from '../utils/time';
+
+function finishSessionLocally(
+  session: TimeSession,
+  endTimeIso: string,
+  note?: string,
+): TimeSession {
+  const startMs = parseBackendDate(session.start_time).getTime();
+  const endMs = Date.parse(endTimeIso);
+  const durationSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
+
+  return {
+    ...session,
+    end_time: endTimeIso,
+    duration_seconds: durationSeconds,
+    note: note?.trim() ? note.trim() : session.note,
+  };
+}
+
+function upsertSession(
+  list: TimeSession[],
+  item: TimeSession,
+  replaceId = item.id,
+): TimeSession[] {
+  const exists = list.some((s) => s.id === replaceId);
+  return exists
+    ? list.map((s) => (s.id === replaceId ? item : s))
+    : [item, ...list];
+}
 
 export function useGritData() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -31,6 +60,8 @@ export function useGritData() {
     Boolean(getStoredSecretKey()),
   );
   const [error, setError] = useState<string | null>(null);
+
+  const mutationSeqRef = useRef(0);
 
   const loadAllData = useCallback(async (sessionLimit = 2000) => {
     const [catsData, sessionsData, activeData, logsData] = await Promise.all([
@@ -162,32 +193,85 @@ export function useGritData() {
     setDailyLogs((prev) => prev.filter((l) => l.log_date !== logDate));
   }, []);
 
-  const startOrSwitchSession = useCallback(async (categoryId: number) => {
-    setError(null);
-    try {
-      const started = await sessionsApi.start({ category_id: categoryId });
-      setActiveSession(started);
-      const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
-      setSessions(updatedSessions);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session');
-    }
-  }, []);
+  const startOrSwitchSession = useCallback(
+    async (categoryId: number) => {
+      setError(null);
+      const prevActive = activeSession;
+      const prevSessions = sessions;
+      const reqId = ++mutationSeqRef.current;
+      try {
+        const tempId = -Date.now();
+        const nowIso = new Date().toISOString();
+        const optimisticActive: TimeSession = {
+          id: tempId,
+          category_id: categoryId,
+          start_time: nowIso,
+          end_time: null,
+          duration_seconds: null,
+          note: null,
+        };
 
-  const stopActiveSession = useCallback(async (optionalNote?: string) => {
-    setError(null);
-    try {
-      const stopped = await sessionsApi.stop();
-      if (optionalNote && optionalNote.trim()) {
-        await sessionsApi.update(stopped.id, { note: optionalNote.trim() });
+        if (prevActive) {
+          setSessions((prev) =>
+            upsertSession(prev, finishSessionLocally(prevActive, nowIso)),
+          );
+        }
+        setActiveSession(optimisticActive);
+        const started = await sessionsApi.start({ category_id: categoryId });
+        if (reqId !== mutationSeqRef.current) return;
+        setActiveSession(started);
+
+        if (prevActive) {
+          const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
+          if (reqId !== mutationSeqRef.current) return;
+          setSessions(updatedSessions);
+        }
+      } catch (err) {
+        if (reqId !== mutationSeqRef.current) return;
+        setActiveSession(prevActive);
+        setSessions(prevSessions);
+        setError(
+          err instanceof Error ? err.message : 'Failed to start session',
+        );
       }
-      setActiveSession(null);
-      const updatedSessions = await sessionsApi.getAll({ limit: 2000 });
-      setSessions(updatedSessions);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to stop session');
-    }
-  }, []);
+    },
+    [activeSession, sessions],
+  );
+
+  const stopActiveSession = useCallback(
+    async (optionalNote?: string) => {
+      setError(null);
+      if (!activeSession) return;
+      const prevActive = activeSession;
+      const prevSessions = sessions;
+      const reqId = ++mutationSeqRef.current;
+      try {
+        const nowIso = new Date().toISOString();
+        const optimisticStopped = finishSessionLocally(
+          prevActive,
+          nowIso,
+          optionalNote,
+        );
+        setActiveSession(null);
+        setSessions((prev) => upsertSession(prev, optimisticStopped));
+        let stopped = await sessionsApi.stop();
+        if (optionalNote && optionalNote.trim()) {
+          stopped = await sessionsApi.update(stopped.id, {
+            note: optionalNote.trim(),
+          });
+        }
+        if (reqId !== mutationSeqRef.current) return;
+        setActiveSession(null);
+        setSessions((prev) => upsertSession(prev, stopped, prevActive.id));
+      } catch (err) {
+        if (reqId !== mutationSeqRef.current) return;
+        setActiveSession(prevActive);
+        setSessions(prevSessions);
+        setError(err instanceof Error ? err.message : 'Failed to stop session');
+      }
+    },
+    [activeSession, sessions],
+  );
 
   const createCategory = useCallback(async (data: CategoryCreate) => {
     const created = await categoriesApi.create(data);
